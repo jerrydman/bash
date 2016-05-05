@@ -1,0 +1,3 @@
+mkdir /tmp/man
+ export MANPATH=/tmp/man:$MANPATH
+echo -e "love:\b\b\b\b\bbaby don't hurt me..." > /tmp/man/whatis
