@@ -1,0 +1,8 @@
+timeout
+default menu.c32
+
+menu title PXE Server
+label 1
+  menu label ^ 1 RHEL6.5 x86_64 - Lab Default
+  kernel rhel6/vmlinuz
+  append initrd=rhel6/initrd.img ks=http_with_ks_file.cfg ksdevice=eth0
