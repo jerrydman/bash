@@ -1,3 +1,7 @@
+#This takes a csv file created from the powershell counterpart and makes #makes the hostname and mac into a dhcpd.conf compatible format
+
+
+
 !/bin/bash
 
 INPUT=vmware.csv
