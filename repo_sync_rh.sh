@@ -1,5 +1,5 @@
 
-echo "Repo Sync Complete" | mail -s " RHEL 6 Sync Complete" gerald.j.reid@intel.com
+echo "Repo Sync Complete" | mail -s " RHEL 6 Sync Complete" email@email.com
 sync --repoid=rhel-x86_64-server-6 --download_path=/temp/repo/rhel6/ -l
 sleep 10
 createrepo /temp/repo/rhel6
