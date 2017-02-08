@@ -1,0 +1,25 @@
+#!/bin/bash
+
+rm  /etc/sysconfig/network-scripts/ifcfg-eth1
+
+newip=$(ifconfig eth0  | awk '/inet / {split($2,a,".");print "172" "." "16" "." a[3]"." a[4] }')
+
+cat <<EOT>> /etc/sysconfig/network-scripts/ifcfg-eth1
+IPV6INIT=yes
+IPV6_AUTOCONF=yes
+BOOTPROTO=static
+DEVICE=eth1
+ONBOOT=yes
+TYPE=Ethernet
+DEFROUTE=yes
+IPADDR=$newip
+NETMASK=255.255.248.0
+PEERDNS=yes
+PEERROUTES=yes
+IPV4_FAILURE_FATAL=no
+IPV6_DEFROUTE=yes
+IPV6_PEERDNS=yes
+IPV6_PEERROUTES=yes
+IPV6_FAILURE_FATAL=no
+NAME="System eth1"
+EOT
