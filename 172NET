@@ -2,7 +2,7 @@
 
 rm  /etc/sysconfig/network-scripts/ifcfg-eth1
 
-newip=$(ifconfig eth0  | awk '/inet / {split($2,a,".");print "172" "." "16" "." a[3]"." a[4] }')
+newip=$(ip addr show dev eth0 | awk '/inet / {split($2,a,".");print "172" "." "16" "." a[3]"." a[4] }')
 
 cat <<EOT>> /etc/sysconfig/network-scripts/ifcfg-eth1
 IPV6INIT=yes
