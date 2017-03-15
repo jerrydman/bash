@@ -101,15 +101,12 @@ sleep 5
 /opt/puppetlabs/bin/puppet agent -t --debug
 
 
-Configure eth1
-rm  /etc/sysconfig/network-scripts/ifcfg-eth1
-
 
 newip=$(ip -4 addr show eth0 | grep -oP "(?<=inet ).*(?=/)" | awk '{split($1,a,".");print "172" "." "16" "." a[3]"." a[4] }')
 
 
 
-cat <<EOT>> /etc/sysconfig/network/interfaces
+cat <<EOT>> /etc/network/interfaces
 auto eth1
 iface eth1 inet static
 address $newip
