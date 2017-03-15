@@ -1,4 +1,5 @@
 #Ubuntu 14.04.5 Kickstart File
+#Created by Gerald Reid
 
 #System language
 lang en_US
@@ -75,7 +76,7 @@ nfs-common
 %post
 
 
-mkdir -p /nfs/ic/proj/soae
+mkdir -p $NFS_DIRECTORY_FOR_PUPPET
 
 wget https://apt.puppetlabs.com/puppetlabs-release-pc1-trusty.deb
 sleep 1
