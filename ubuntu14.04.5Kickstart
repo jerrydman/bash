@@ -1,5 +1,8 @@
-#Ubuntu 14.04.5 Kickstart File
-#Created by Gerald Reid
+#
+#Generic Kickstart template for Ubuntu
+#Platform: x86 and x86-64
+#
+base-config base-config/late_command string cp /etc/network/interfaces.bkup /etc/network/interfaces
 
 #System language
 lang en_US
@@ -21,7 +24,8 @@ rootpw --disabled
 
 
 #Initial user (user with sudo capabilities) 
-user $USERNAME --fullname "" --iscrypted --password $1$d.lDR64Z$QvO119J3h.vk2nxLQkKkP1
+
+user $USERNAME --fullname "$NAME" --iscrypted --password $CRYPTED
 
 d-i user-setup/allow-password-weak boolean true
 
@@ -33,8 +37,8 @@ text
 
 #Install OS instead of upgrade
 install
-url --url http://$IPADDRESSS/ubuntu14045/ubuntu/
-
+url --url http://$IPADDRESS/ubuntu14045/ubuntu/
+#url --url http://archive.ubuntu.com/ubuntu
 
 #System bootloader configuration
 bootloader --location=mbr 
@@ -66,17 +70,18 @@ skipx
 
 
 %packages
-ubuntu-minimal
+ubuntu-standard
+build-essential
 openssh-server
 screen
 curl
 wget
 nfs-common
 
-%post
+%post 
 
 
-mkdir -p $NFS_DIRECTORY_FOR_PUPPET
+mkdir -p /$NFSDIRECTORY
 
 wget https://apt.puppetlabs.com/puppetlabs-release-pc1-trusty.deb
 sleep 1
@@ -91,7 +96,7 @@ rm /etc/puppetlabs/puppet/puppet.conf
 
 sleep 5
 
-cat <<EOT>> /etc/puppetlabs/puppet/puppet.conf
+cat <<'EOT' >> /etc/puppetlabs/puppet/puppet.conf
 server = $PUPPETSERVER
 environment = production
 runinterval = 1h
@@ -100,13 +105,17 @@ EOT
 sleep 5
 /opt/puppetlabs/bin/puppet agent -t --debug
 
-
+sleep 5
 
 newip=$(ip -4 addr show eth0 | grep -oP "(?<=inet ).*(?=/)" | awk '{split($1,a,".");print "172" "." "16" "." a[3]"." a[4] }')
 
 
+echo $newip
 
-cat <<EOT>> /etc/network/interfaces
+
+sleep 5
+
+cat << EOT >> /etc/network/interfaces
 auto eth1
 iface eth1 inet static
 address $newip
@@ -114,13 +123,32 @@ netmask 255.255.252.0
 EOT
 
 
+cp /etc/network/interfaces /etc/network/interfaces.bkup
+
+
 rm /etc/apt/sources.list
 sleep 2
 cat <<EOT>> /etc/apt/sources.list
-deb http://archive.ubuntu.com/ubuntu/ precise main restricted universe multiverse
-deb http://archive.ubuntu.com/ubuntu/ precise-updates main restricted universe multiverse
-deb http://archive.ubuntu.com/ubuntu/ precise-backports main restricted universe multiverse
-deb http://security.ubuntu.com/ubuntu precise-security main restricted universe multiverse
-deb http://archive.canonical.com/ubuntu precise partner
-deb http://extras.ubuntu.com/ubuntu precise main 
+#------------------------------------------------------------------------------#
+#                            OFFICIAL UBUNTU REPOS                             #
+#------------------------------------------------------------------------------#
+
+
+###### Ubuntu Main Repos
+deb http://us.archive.ubuntu.com/ubuntu/ trusty main restricted universe multiverse 
+
+###### Ubuntu Update Repos
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-security main restricted universe multiverse 
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates main restricted universe multiverse 
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-proposed main restricted universe multiverse 
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-backports main restricted universe multiverse 
+
+###### Ubuntu Extras Repo
+deb http://extras.ubuntu.com/ubuntu trusty main
+deb-src http://extras.ubuntu.com/ubuntu trusty main
+
 EOT
+
+sleep 5
+apt-get update -y
+
