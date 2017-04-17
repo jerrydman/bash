@@ -1,0 +1,15 @@
+#/bin/bash
+# script to change eth1 to eth5 
+
+cd /etc/sysconfig/network-scripts
+
+cp ifcfg-eth1 ifcfg-eth5
+mv ifcfg-eth1 ifcfg-eth1.bkup
+
+
+sed 's /eth1/eth5/g' ifcfg-eth5
+
+
+ip link set eth1 down
+ip link set eth1 name eth5
+ip link set eth5 up
