@@ -1,0 +1,12 @@
+#/bin/bash
+
+
+dockerip=$(ip -4 addr show eth0 | grep -oP "(?<=inet ).*(?=/)" | awk '{split($1,a,".");print "192" "." "168" "." a[3]"." a[4] }')
+
+
+cat <<EOT>> /etc/docker/daemon.json
+
+{
+  "bip": "$dockerip/24"
+}
+EOT
