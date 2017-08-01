@@ -1,0 +1,80 @@
+#!/bin/bash
+#Script to Create amazon instance 
+#Jerry Reid
+
+
+#This part up to Line 15 maybe replaced with an API call from Salesforce
+gmailUsername='SupportUsername'
+gmailPassword='SupportPassword'
+echo
+
+
+companyemail=$(curl -u $gmailUsername:$gmailPassword --silent "https://mail.google.com/mail/feed/atom" | grep -E -o "\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b" | awk 'NR==1{print $1}')
+company=$(curl -u $gmailUsername:$gmailPassword --silent "https://mail.google.com/mail/feed/atom" | grep -E -o "\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b" | awk -F "@" 'NR==1{print $1}')
+echo $company
+echo $companyemail
+#*******
+
+cat <<EC2SEC>> ec2securitygroup.json
+{
+    "Description": "$company",
+    "GroupName": "$company",
+    "DryRun": false
+}
+EC2SEC
+
+#Security Group
+aws ec2 create-security-group --cli-input-json file://ec2securitygroup.json> security.txt
+groupid=$(awk -F'"' '{print $4}') security.txt 
+echo $groupid
+
+
+aws configure get region
+
+aws ec2 create-key-pair --key-name $company --output text > $company.pem
+chmod 0400 $company.pem
+
+#If we need to mail the key; right now it is used for ssh to install vsftpd and configure in
+#we can always mail it to a dumb mailbox if we want or maybe mail someoutput or something company; date; time; ticket number possibly
+#mailx -a $company.pem -s "Private Key for FTP" $companyemail
+
+#Set the Security Group
+aws ec2 authorize-security-group-ingress --group-id $groupid --protocol tcp --port 21 --cidr 0.0.0.0/0 --region us-east-2
+aws ec2 authorize-security-group-ingress --group-id $groupid --protocol tcp --port 22 --cidr 0.0.0.0/0 --region us-east-2
+
+#Create the Instance using AMI Linux
+aws ec2 run-instances --image-id ami-8a7859ef --count 1 --instance-type t2. micro --key-name $company > $company.json 
+
+#Get Instance ID
+InstanceID=$(cat $company.json | jq '.Instances[0].InstanceId'|sed -e 's/^"//' -e 's/"$//')
+
+#Get IP address
+InstanceIP=$(aws ec2 describe-instances --instance-ids $InstanceID   --query "Reservations[*].Instances[*].PublicIpAddress"   --output=text)
+
+#tag instance
+aws ec2 create-tags --resources $InstanceID --tag 'Key="Name",Value='$company'+'ftp''
+
+#WORKING TILL THIS PART*******
+
+#Install VSFTPD and Configure
+#Set FTP Username and Password
+password=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-32};echo;)
+username="$company.ftp"
+
+#Install VSFTPD and Configure
+ssh -i $company.pem  ec2-user@$InstanceIP | 'yum install vsftpd -y'
+ssh -i $company.pem  ec2-user@$InstanceIP | 'echo $password | passwd $username --stdin'
+
+
+#Configure vsftp and write config file or generate it and scp it over
+
+
+
+#30 Days Later
+#Delete Instance
+#Delete Security Group
+#Delete Key
+
+
+
+
