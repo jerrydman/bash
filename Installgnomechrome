@@ -1,0 +1,20 @@
+echo Updating CentOS to Install GNOME VNC Firefox and Chrome
+
+cat << EOF > /etc/yum.repos.d/google-chrome.repo
+[google-chrome]
+name=google-chrome - \$basearch
+baseurl=http://dl.google.com/linux/chrome/rpm/stable/\$basearch
+enabled=1
+gpgcheck=0
+gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub
+EOF
+
+yum install  -y gnome-* google-chrome-stable tigervnc firefox tigervnc-server
+
+echo setting up VNC sessions
+
+vncserver
+
+ip=$(ip addr show |grep "inet " |grep -v 127.0.0. |grep -v 172. |head -2|cut -d" " -f6|cut -d/ -f1)
+
+echo "All complete; use a vnc viewer and connect $ip:1"
