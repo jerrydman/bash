@@ -1,0 +1,154 @@
+#
+#Generic Kickstart template for Ubuntu
+#Platform: x86 and x86-64
+#
+base-config base-config/late_command string cp /etc/network/interfaces.bkup /etc/network/interfaces
+
+#System language
+lang en_US
+
+#Language modules to install
+langsupport en_US
+
+#System keyboard
+keyboard us
+
+#System mouse
+mouse
+
+#System timezone
+timezone America/Chicago
+
+#Root password
+rootpw --disabled
+
+
+#Initial user (user with sudo capabilities) 
+
+user $USERNAME --fullname "$NAME" --iscrypted --password $CRYPTED
+
+d-i user-setup/allow-password-weak boolean true
+
+#Reboot after installation
+reboot
+
+Use text mode install
+text
+
+#Install OS instead of upgrade
+install
+url --url http://$IPADDRESS/ubuntu14045/ubuntu/
+#url --url http://archive.ubuntu.com/ubuntu
+
+#System bootloader configuration
+bootloader --location=mbr 
+
+#Clear the Master Boot Record
+zerombr yes
+
+#Partition clearing information
+clearpart --all --initlabel 
+
+#Basic disk partition
+part / --fstype ext4 --size 1 --grow --asprimary 
+part swap --size 1024 
+part /boot --fstype ext4 --size 4000 --asprimary 
+
+
+
+#System authorization infomation
+auth  --useshadow  --enablemd5 
+
+#Network information
+network --device=eth0 --bootproto=dhcp
+
+#Firewall configuration
+firewall --disabled  
+
+#Do not configure the X Window System
+skipx
+
+
+%packages
+ubuntu-standard
+build-essential
+openssh-server
+screen
+curl
+wget
+nfs-common
+
+%post 
+
+
+mkdir -p /$NFSDIRECTORY
+
+wget https://apt.puppetlabs.com/puppetlabs-release-pc1-trusty.deb
+sleep 1
+dpkg -i puppetlabs-release-pc1-trusty.deb
+sleep 2
+apt-get update
+sleep 2
+apt-get install puppet-agent
+sleep 10
+
+rm /etc/puppetlabs/puppet/puppet.conf
+
+sleep 5
+
+cat <<'EOT' >> /etc/puppetlabs/puppet/puppet.conf
+server = $PUPPETSERVER
+environment = production
+runinterval = 1h
+EOT
+
+sleep 5
+/opt/puppetlabs/bin/puppet agent -t --debug
+
+sleep 5
+
+newip=$(ip -4 addr show eth0 | grep -oP "(?<=inet ).*(?=/)" | awk '{split($1,a,".");print "172" "." "16" "." a[3]"." a[4] }')
+
+
+echo $newip
+
+
+sleep 5
+
+cat << EOT >> /etc/network/interfaces
+auto eth1
+iface eth1 inet static
+address $newip
+netmask 255.255.252.0
+EOT
+
+
+cp /etc/network/interfaces /etc/network/interfaces.bkup
+
+
+rm /etc/apt/sources.list
+sleep 2
+cat <<EOT>> /etc/apt/sources.list
+#------------------------------------------------------------------------------#
+#                            OFFICIAL UBUNTU REPOS                             #
+#------------------------------------------------------------------------------#
+
+
+###### Ubuntu Main Repos
+deb http://us.archive.ubuntu.com/ubuntu/ trusty main restricted universe multiverse 
+
+###### Ubuntu Update Repos
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-security main restricted universe multiverse 
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-updates main restricted universe multiverse 
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-proposed main restricted universe multiverse 
+deb http://us.archive.ubuntu.com/ubuntu/ trusty-backports main restricted universe multiverse 
+
+###### Ubuntu Extras Repo
+deb http://extras.ubuntu.com/ubuntu trusty main
+deb-src http://extras.ubuntu.com/ubuntu trusty main
+
+EOT
+
+sleep 5
+apt-get update -y
+
