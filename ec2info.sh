@@ -9,7 +9,7 @@
 echo "-------------------------------------------------------------------------------------------------------------------------------"
 echo "This script will search all accounts by instance id and output hostname and other appropiate info required for troubleshooting."
 echo "This is based on EC2 tags so please double check all info"
-echo "This script will take some time to run (average being abount 1.5 minutes) since it does search ALL the accounts (qa -> ssprod)"
+echo "This script will take some time to run (average being abount 1.5 minutes) since it does search ALL the accounts (profile1,profile2,etc)"
 echo "This script does require awsls which can be found  https://github.com/jckuester/awsls"
 echo "-------------------------------------------------------------------------------------------------------------------------------"
 
