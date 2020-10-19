@@ -1,6 +1,7 @@
 timeout 100
 default menu.c32
 
+
 menu title OBT 1 Death Star
 
 label 0
